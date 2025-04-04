@@ -1,12 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
 
-
-#initial_state = input("Enter initial state: ")
-#states = input("Enter all states: ").split(', ')
-#alphabet = input("Enter alphabet: ").split(', ')
-#accepting_states = input("Enter accepting state(s): ").split(', ')
-
 def run():
     initial = initial_state.get().strip()
     states = [s.strip() for s in all_states.get().split(',')]
@@ -46,19 +40,19 @@ accepting_states = tk.StringVar()
 
 
 tk.Label(root, text="Enter Initial State: ").grid(row=1, column=0, padx=5, pady=5, sticky='w')
-tk.Entry(root, textvariable=initial_state, width=50).grid(row=1, column=1, padx=5, pady=5)
+tk.Entry(root, textvariable=initial_state, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=1, column=1, padx=5, pady=5)
 
 tk.Label(root, text="Enter All States: ").grid(row=2, column=0, padx=5, pady=5, sticky='w')
-tk.Entry(root, textvariable=all_states, width=50).grid(row=2, column=1, padx=5, pady=5)
+tk.Entry(root, textvariable=all_states, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=2, column=1, padx=5, pady=5)
 
 tk.Label(root, text="Enter Alphabet: ").grid(row=3, column=0, padx=5, pady=5, sticky='w')
-tk.Entry(root, textvariable=alphabet, width=50).grid(row=3, column=1, padx=5, pady=5)
+tk.Entry(root, textvariable=alphabet, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=3, column=1, padx=5, pady=5)
 
 tk.Label(root, text="Enter Transitions: ").grid(row=4, column=0, padx=5, pady=5, sticky='w')
-tk.Entry(root, textvariable=transitions, width=50).grid(row=4, column=1, padx=5, pady=5)
+tk.Entry(root, textvariable=transitions, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=4, column=1, padx=5, pady=5)
 
 tk.Label(root, text="Enter Accepting State(s): ").grid(row=5, column=0, padx=5, pady=5, sticky='w')
-tk.Entry(root, textvariable=accepting_states, width=50).grid(row=5, column=1, padx=5, pady=5)
+tk.Entry(root, textvariable=accepting_states, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=5, column=1, padx=5, pady=5)
 
 tk.Button(root, text="Run", command=run).grid(row=6, column=0, columnspan=2, pady=10)
 
