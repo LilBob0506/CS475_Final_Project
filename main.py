@@ -9,10 +9,12 @@ def run():
 
     transition_set = {}
     for rule in transitions.get().split(';'):
-        if '=' in rule:
-            key, value = rule.split('=')
-            from_state, symbol = key.split(',')
-            transition_set[(from_state.strip(), symbol.strip())] = value.strip()
+        try:
+            from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
+            transition_set[(from_state, symbol)] = to_state
+        except ValueError:
+            result_label.config(text=f"Invalid transition format: '{rule}'")
+            return
 
     dfa = {
         "states": states,
@@ -26,6 +28,7 @@ def run():
     for k, v in dfa.items():
         print(f"{k}: {v}")
 
+
 # Main 
 root = tk.Tk()
 root.title("DFA")
@@ -37,6 +40,7 @@ all_states = tk.StringVar()
 alphabet = tk.StringVar()
 transitions = tk.StringVar()
 accepting_states = tk.StringVar()
+input_string = tk.StringVar()
 
 
 tk.Label(root, text="Enter Initial State: ").grid(row=1, column=0, padx=5, pady=5, sticky='w')
@@ -54,6 +58,13 @@ tk.Entry(root, textvariable=transitions, width=50, bd=2, relief="solid", highlig
 tk.Label(root, text="Enter Accepting State(s): ").grid(row=5, column=0, padx=5, pady=5, sticky='w')
 tk.Entry(root, textvariable=accepting_states, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=5, column=1, padx=5, pady=5)
 
-tk.Button(root, text="Run", command=run).grid(row=6, column=0, columnspan=2, pady=10)
+tk.Label(root, text="Input String to Test: ").grid(row=6, column=0, padx=5, pady=5, sticky='w')
+tk.Entry(root, textvariable=input_string, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=6, column=1, padx=5, pady=5)
+
+tk.Button(root, text="Run", command=run).grid(row=7, column=0, columnspan=2, pady=10)
+
+result_label = tk.Label(root, text="", font=("Arial", 12, "bold"))
+result_label.grid(row=9, column=0, columnspan=2, pady=10)
+
 
 root.mainloop()
