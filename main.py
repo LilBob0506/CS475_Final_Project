@@ -1,5 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk
+
+# pip install tk,graphviz
+#install graphviz on local device, add to PATH directory in environment variables
+import graphviz
 
 def run():
     initial = initial_state.get().strip()
@@ -8,6 +13,7 @@ def run():
     accepting = set(a.strip() for a in accepting_states.get().split(','))
 
     transition_set = {}
+    input=input_string
     for rule in transitions.get().split(';'):
         try:
             from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
@@ -21,12 +27,69 @@ def run():
         "alphabet": alphabet_set,
         "initial_state": initial,
         "accepting_states": accepting,
-        "transitions": transition_set
+        "transitions": transition_set,
+        "input":input
     }
+    #start of dfa creation
+    dfa_graph= graphviz.Digraph()
+
+    for state in dfa["states"]:
+        if state in dfa["accepting_states"]:
+            dfa_graph.attr('node',shape='doublecircle')
+        else:
+            dfa_graph.attr('node',shape='circle')
+        dfa_graph.node(state)
+
+    dfa_graph.attr('node',shape='plaintext')
+    dfa_graph.node('start',label='')
+    dfa_graph.edge('start',dfa["initial_state"])
+
+    for (from_state,symbol),to_state in dfa["transitions"].items():
+        dfa_graph.edge(from_state,to_state, label=symbol)
+
+    dfa_graph.render('dfa',format='png',view=False)
+
+    #end of dfa creation
+
+    #dfa output start
+
+    output= tk.Toplevel()
+    output.title("DFA OUTPUT")
+    dfa_image= Image.open("dfa.png")
+    dfa_photo= ImageTk.PhotoImage(dfa_image)
+    dfa_label= tk.Label(output, image=dfa_photo)
+    dfa_label.pack()
+
+    output.mainloop()
+
+    #dfa output end
+
 
     print("DFA Structure:")
     for k, v in dfa.items():
         print(f"{k}: {v}")
+
+
+def dfa_creation(initial_state,all_states,alphabet,transitions,accepting_states,input_string):
+    dfa= graphviz.Digraph()
+
+    for state in all_states:
+        if state in accepting_states:
+            dfa.attr('node',shape='doublecircle')
+        else:
+            dfa.attr('node',shape='circle')
+        dfa.node(state)
+    
+    dfa.attr('node',shape='plaintext')
+    dfa.node('start',label='')
+    dfa.edge('start',initial_state)
+    for (from_state,symbol),to_state in transitions.items():
+        dfa.edge(from_state,to_state, label=symbol)
+
+    dfa.render('dfa',format='png',view=False)
+
+    return dfa
+
 
 
 # Main 

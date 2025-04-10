@@ -1,0 +1,8 @@
+digraph {
+	node [shape=doublecircle]
+	q0
+	node [shape=plaintext]
+	start [label=""]
+	start -> q0
+	q0 -> q0 [label=0]
+}
