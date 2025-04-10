@@ -30,6 +30,30 @@ def run():
         "transitions": transition_set,
         "input":input
     }
+
+    input_str = input_string.get().strip()
+    current_state = initial
+
+    try:
+        for symbol in input_str:
+            if symbol not in alphabet_set:
+                raise ValueError(f"Symbol '{symbol}' not in alphabet.")
+            current_state = transition_set[(current_state, symbol)]
+
+        if current_state in accepting:
+            result = f"Accepted! Ended in state: {current_state}"
+            result_label.config(text=result)
+        else:
+            result = f"Rejected. Ended in state: {current_state}"
+            result_label.config(text=result)
+
+    except KeyError:
+        result = f"Invalid transition from state '{current_state}' with symbol '{symbol}'"
+        result_label.config(text=result)
+    except ValueError as ve:
+        result_label.config(text=f"{ve}")
+
+
     #start of dfa creation
     dfa_graph= graphviz.Digraph()
 
