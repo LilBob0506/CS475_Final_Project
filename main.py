@@ -3,6 +3,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import graphviz
 
+# Run button
 def run():
     initial = initial_state.get().strip()
     states = [s.strip() for s in all_states.get().split(',')]
@@ -116,9 +117,27 @@ def run():
 
     output.mainloop()
 
+# Sample run button
+def sample_run():
+    initial_state.set("q0")
+    all_states.set("q0, q1")
+    accepting_states.set("q1")
+    alphabet.set("0, 1")
+    transitions.set("q0-0-q1; q1-0-q0; q0-1-q0; q1-1-q1")
+    input_string.set("011")
+
+# Clear button
+def clear():
+    initial_state.set("")
+    all_states.set("")
+    accepting_states.set("")
+    alphabet.set("")
+    transitions.set("")
+    input_string.set("")
+
 # ------------------------------- Main GUI setup ------------------------------- #
 root = tk.Tk()
-root.title("DFA")
+root.title("DFA Visualizer")
 root.config(padx=30, pady=30)
 root.geometry("1000x400")
 
@@ -148,19 +167,12 @@ tk.Entry(root, textvariable=accepting_states, width=50, bd=2, relief="solid", hi
 tk.Label(root, text="Input String to Test: ").grid(row=6, column=0, padx=5, pady=5, sticky='w')
 tk.Entry(root, textvariable=input_string, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=6, column=1, padx=5, pady=5)
 
-# Debug run button
-def debug_run():
-    initial_state.set("q0")
-    all_states.set("q0, q1")
-    accepting_states.set("q1")
-    alphabet.set("0, 1")
-    transitions.set("q0-0-q1; q1-0-q0; q0-1-q0; q1-1-q1")
-    input_string.set("010")
-
-#Debug button
-tk.Button(root, text="Load Debug Inputs", command=debug_run).grid(row=7, column=0, columnspan=2, pady=10)
+# Sample input button
+tk.Button(root, text="Load Sample Inputs", command=sample_run).grid(row=7, column=0, columnspan=2, pady=10)
 # Run button
 tk.Button(root, text="Run", command=run).grid(row=8, column=0, columnspan=2, pady=10)
+# Clear button
+tk.Button(root, text="Clear", command=clear).grid(row=8, column=0, columnspan=1, pady=10)
 
 # Result label for showing messages
 result_label = tk.Label(root, text="", font=("Arial", 12, "bold"))
