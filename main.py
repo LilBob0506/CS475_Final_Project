@@ -3,7 +3,135 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import graphviz
 
-# Run button
+#Visualize String button
+def run_string():
+    initial = initial_state.get().strip()
+    states = [s.strip() for s in all_states.get().split(',')]
+    alphabet_set = [a.strip() for a in alphabet.get().split(',')]
+    accepting = set(a.strip() for a in accepting_states.get().split(','))
+
+    transition_set = {}
+    input_str = input_string.get().strip()
+    
+    if not input_str:
+        result_label.config(text="No input string provided", fg="orange")
+        return
+    
+    for rule in transitions.get().split(';'):
+        try:
+            from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
+            transition_set[(from_state, symbol)] = to_state
+        except ValueError:
+            result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
+            return
+    
+    steps = []
+    current_state = initial
+    for symbol in input_str:
+        if symbol not in alphabet_set:
+            result_label.config(text=f"Symbol '{symbol}' not in alphabet.", fg="red")
+            return
+        if (current_state, symbol) not in transition_set:
+            result_label.config(text=f"No transition from {current_state} with symbol '{symbol}'", fg="red")
+            return
+        next_state = transition_set[(current_state, symbol)]
+        steps.append((current_state, symbol, next_state))
+        current_state = next_state
+    
+    # Display window for transition state
+    displayer = tk.Toplevel()
+    displayer.title("DFA Transitions")
+    displayer.geometry("+800+100")
+    # output.resizable(False, False)
+
+    # Initial DFA creation
+    dfa_graph = graphviz.Digraph()
+
+    for state in states:
+        if state in accepting:
+            dfa_graph.attr('node', shape='doublecircle')
+        else:
+            dfa_graph.attr('node', shape='circle')
+        dfa_graph.node(state)
+
+    dfa_graph.attr('node', shape='plaintext')
+    dfa_graph.node('start', label='')
+    dfa_graph.edge('start', initial)
+
+    for (from_state, symbol), to_state in transition_set.items():
+        dfa_graph.edge(from_state, to_state, label=symbol)
+
+    dfa_graph.render('dfa', format='png', view=False)
+
+    dfa_image = Image.open("dfa.png")
+    dfa_photo = ImageTk.PhotoImage(dfa_image)
+    dfa_label = tk.Label(displayer, image=dfa_photo)
+    dfa_label.pack()
+
+    step_index = tk.IntVar(value=0)
+
+    # Changes the DFA displayed on command
+    def current_transition():
+        current = step_index.get()
+        total = len(steps)
+      
+        if current >= total:
+            current_label.config(text="No more steps.")
+            return
+
+        from_state, symbol, to_state = steps[current]
+        step_text = f"Step {current + 1} of {total}: {from_state} --{symbol}--> {to_state}"
+
+        current_label.config(text=step_text)
+
+        dfa_graph = graphviz.Digraph()
+
+        for state in states:
+            if state in accepting:
+                dfa_graph.attr('node', shape='doublecircle')
+            else:
+                dfa_graph.attr('node', shape='circle')
+            dfa_graph.node(state)
+
+        dfa_graph.attr('node', shape='plaintext')
+        dfa_graph.node('start', label='')
+        dfa_graph.edge('start', initial)            
+
+        for (from_s, sym), to_s in transition_set.items():
+            if steps[step_index.get()] == (from_s, sym, to_s):
+                dfa_graph.edge(from_s, to_s, label=sym, color='green', penwidth='2')
+            else:
+                dfa_graph.edge(from_s, to_s, label=sym)
+
+        dfa_graph.render('dfa', format='png', view=False)
+
+        img = Image.open("dfa.png")
+        photo = ImageTk.PhotoImage(img)
+        dfa_label.config(image=photo)
+        dfa_label.image = photo
+    
+    # Next character in input string
+    def next_transition():
+        if step_index.get() < len(steps) - 1:
+            step_index.set(step_index.get() + 1)
+            current_transition()
+
+    # Previous character in input string
+    def previous_transition():
+        if step_index.get() > 0:
+            step_index.set(step_index.get() - 1)
+            current_transition()
+
+    current_label = tk.Label(displayer, text=f"Input String: '{input_str}'", font=("Arial", 10, "bold"))
+    current_label.pack(pady=(10, 5))
+
+    # Back and forward buttons for window
+    tk.Button(displayer, text="Previous", command=previous_transition).pack(side="left", padx=10)
+    tk.Button(displayer, text="Next", command=next_transition).pack(side="right", padx=10)
+
+    displayer.mainloop()
+
+# Generate DFA button
 def run():
     initial = initial_state.get().strip()
     states = [s.strip() for s in all_states.get().split(',')]
@@ -67,24 +195,29 @@ def run():
     input_str = input_string.get().strip()
     current_state = initial
 
-    try:
-        for symbol in input_str:
-            if symbol not in alphabet_set:
-                raise ValueError(f"Symbol '{symbol}' not in alphabet.")
-            current_state = transition_set[(current_state, symbol)]
+    # Tests input string
+    if input_str:
+        try:
+            for symbol in input_str:
+                if symbol not in alphabet_set:
+                    raise ValueError(f"Symbol '{symbol}' not in alphabet.")
+                current_state = transition_set[(current_state, symbol)]
 
-        if current_state in accepting:
-            result = f"Accepted! Ended in state: {current_state}"
-            result_label.config(text=result, fg="green")  # Accepted in green
-        else:
-            result = f"Rejected. Ended in state: {current_state}"
-            result_label.config(text=result, fg="red")  # Rejected in red
+            if current_state in accepting:
+                result = f"Accepted! Ended in state: {current_state}"
+                result_label.config(text=result, fg="green")  # Accepted in green
+            else:
+                result = f"Rejected. Ended in state: {current_state}"
+                result_label.config(text=result, fg="red")  # Rejected in red
 
-    except KeyError:
-        result = f"Invalid transition from state '{current_state}' with symbol '{symbol}'"
-        result_label.config(text=result, fg="red")  # Error in red
-    except ValueError as ve:
-        result_label.config(text=f"{ve}", fg="red")  # Error in red
+        except KeyError:
+            result = f"Invalid transition from state '{current_state}' with symbol '{symbol}'"
+            result_label.config(text=result, fg="red")  # Error in red
+        except ValueError as ve:
+            result_label.config(text=f"{ve}", fg="red")  # Error in red
+    
+    else:
+        result_label.config(text="No input string provided", fg="orange")
 
     # Generate DFA visualization
     dfa_graph = graphviz.Digraph()
@@ -172,12 +305,14 @@ tk.Entry(root, textvariable=input_string, width=50, bd=2, relief="solid", highli
 # Sample input button
 tk.Button(root, text="Load Sample Inputs", command=sample_run).grid(row=7, column=0, columnspan=2, pady=10)
 # Clear button
-tk.Button(root, text="Clear", command=clear).grid(row=7, column=1, columnspan=1, pady=10, sticky='e')
+tk.Button(root, text="Clear", command=clear).grid(row=7, column=1, columnspan=2, pady=10, sticky='e')
 # Generate DFA button
 tk.Button(root, text="Generate DFA", command=run).grid(row=8, column=0, columnspan=2, pady=10)
+# Visualize Transition button
+tk.Button(root, text="Visualize Transitions", command=run_string).grid(row=9, column=0, columnspan=2, pady=10)
 
 # Result label for showing messages
 result_label = tk.Label(root, text="", font=("Arial", 12, "bold"))
-result_label.grid(row=9, column=0, columnspan=2, pady=10)
+result_label.grid(row=10, column=0, columnspan=2, pady=10)
 
 root.mainloop()
