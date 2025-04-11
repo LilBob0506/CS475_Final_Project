@@ -107,7 +107,7 @@ def run():
 
     # Display DFA image in a new window
     output = tk.Toplevel()
-    output.geometry("+750+100")
+    output.geometry("+800+100")
     # output.resizable(False, False)
     output.title("DFA OUTPUT")
     dfa_image = Image.open("dfa.png")
@@ -139,7 +139,7 @@ def clear():
 root = tk.Tk()
 root.title("DFA Visualizer")
 root.config(padx=30, pady=30)
-root.geometry("1000x400")
+root.geometry("1000x500")
 
 initial_state = tk.StringVar()
 all_states = tk.StringVar()
@@ -147,6 +147,8 @@ alphabet = tk.StringVar()
 transitions = tk.StringVar()
 accepting_states = tk.StringVar()
 input_string = tk.StringVar()
+
+tk.Label(root, text="Use commas to separate multiple items (e.g., q0,q1,q2)", font=("Arial", 10)).grid(row=0, column=0, columnspan=2, pady=(0, 10))
 
 # GUI input fields and labels
 tk.Label(root, text="Enter Initial State: ").grid(row=1, column=0, padx=5, pady=5, sticky='w')
@@ -158,7 +160,7 @@ tk.Entry(root, textvariable=all_states, width=50, bd=2, relief="solid", highligh
 tk.Label(root, text="Enter Alphabet: ").grid(row=3, column=0, padx=5, pady=5, sticky='w')
 tk.Entry(root, textvariable=alphabet, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=3, column=1, padx=5, pady=5)
 
-tk.Label(root, text="Enter Transitions: ").grid(row=4, column=0, padx=5, pady=5, sticky='w')
+tk.Label(root, text="Enter Transitions (e.g. q0-0-q1; q1-0-q0): ").grid(row=4, column=0, padx=5, pady=5, sticky='w')
 tk.Entry(root, textvariable=transitions, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=4, column=1, padx=5, pady=5)
 
 tk.Label(root, text="Enter Accepting State(s): ").grid(row=5, column=0, padx=5, pady=5, sticky='w')
@@ -169,10 +171,10 @@ tk.Entry(root, textvariable=input_string, width=50, bd=2, relief="solid", highli
 
 # Sample input button
 tk.Button(root, text="Load Sample Inputs", command=sample_run).grid(row=7, column=0, columnspan=2, pady=10)
-# Run button
-tk.Button(root, text="Run", command=run).grid(row=8, column=0, columnspan=2, pady=10)
 # Clear button
-tk.Button(root, text="Clear", command=clear).grid(row=8, column=0, columnspan=1, pady=10)
+tk.Button(root, text="Clear", command=clear).grid(row=7, column=1, columnspan=1, pady=10, sticky='e')
+# Generate DFA button
+tk.Button(root, text="Generate DFA", command=run).grid(row=8, column=0, columnspan=2, pady=10)
 
 # Result label for showing messages
 result_label = tk.Label(root, text="", font=("Arial", 12, "bold"))
