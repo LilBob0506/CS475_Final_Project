@@ -68,10 +68,12 @@ def run_string():
     dfa_label = tk.Label(displayer, image=dfa_photo)
     dfa_label.pack()
 
-    step_index = tk.IntVar(value=0)
+    step_index = tk.IntVar(value=-1)
+    dynamic_string = tk.StringVar(value="")
 
     # Changes the DFA displayed on command
     def current_transition():
+
         current = step_index.get()
         total = len(steps)
       
@@ -80,9 +82,10 @@ def run_string():
             return
 
         from_state, symbol, to_state = steps[current]
-        step_text = f"Step {current + 1} of {total}: {from_state} --{symbol}--> {to_state}"
+        current_text = f"Transition {current + 1} of {total}: {from_state} --{symbol}--> {to_state}"
 
-        current_label.config(text=step_text)
+        string_label.config(text=dynamic_string.get())
+        current_label.config(text=current_text)
 
         dfa_graph = graphviz.Digraph()
 
@@ -92,6 +95,11 @@ def run_string():
             else:
                 dfa_graph.attr('node', shape='circle')
             dfa_graph.node(state)
+
+            if step_index.get() < len(steps) and state == steps[step_index.get()][0]:
+                dfa_graph.node(state, style='filled', fillcolor='lightblue', color='blue', penwidth='2')
+            else:
+                dfa_graph.node(state)
 
         dfa_graph.attr('node', shape='plaintext')
         dfa_graph.node('start', label='')
@@ -114,16 +122,22 @@ def run_string():
     def next_transition():
         if step_index.get() < len(steps) - 1:
             step_index.set(step_index.get() + 1)
+            symbol = steps[step_index.get()][1]
+            dynamic_string.set(dynamic_string.get() + symbol)
             current_transition()
 
     # Previous character in input string
     def previous_transition():
         if step_index.get() > 0:
             step_index.set(step_index.get() - 1)
+            dynamic_string.set(dynamic_string.get()[:-1])
             current_transition()
 
-    current_label = tk.Label(displayer, text=f"Input String: '{input_str}'", font=("Arial", 10, "bold"))
-    current_label.pack(pady=(10, 5))
+    string_label = tk.Label(displayer, text=f"Input String: '{input_str}'", font=("Arial", 10, "bold"))
+    string_label.pack(pady=(10, 5))
+    current_label = tk.Label(displayer, text="", font=("Arial", 10))
+    current_label.pack(pady=(0, 10))
+
 
     # Back and forward buttons for window
     tk.Button(displayer, text="Previous", command=previous_transition).pack(side="left", padx=10)
