@@ -1,9 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
-
-# pip install tk,graphviz
-#install graphviz on local device, add to PATH directory in environment variables
 import graphviz
 
 def run():
@@ -19,18 +16,53 @@ def run():
             from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
             transition_set[(from_state, symbol)] = to_state
         except ValueError:
-            result_label.config(text=f"Invalid transition format: '{rule}'")
+            result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
             return
 
-    dfa = {
-        "states": states,
-        "alphabet": alphabet_set,
-        "initial_state": initial,
-        "accepting_states": accepting,
-        "transitions": transition_set,
-        "input":input
-    }
+    # Check for multiple initial states
+    if initial.count(',') > 0:
+        result_label.config(text="Only one initial state is allowed.", fg="orange")
+        return
 
+    # Check for missing transitions and add self-loops if requested
+    missing_transitions = False
+    for state in states:
+        for symbol in alphabet_set:
+            if (state, symbol) not in transition_set:
+                result_label.config(text=f"Missing transition for state '{state}' on symbol '{symbol}'.", fg="orange")
+                missing_transitions = True
+
+    if missing_transitions:
+        # Ask if missing transitions should be self loops
+        response = messagebox.askyesno("Missing Transitions", "Do you want to add self-loops for missing transitions?")
+        if response:
+            # Update transition set with self loops for missing transitions
+            for state in states:
+                for symbol in alphabet_set:
+                    if (state, symbol) not in transition_set:
+                        transition_set[(state, symbol)] = state
+            # Update input fields with self-loops added
+            new_transitions = "; ".join([f"{from_state}-{symbol}-{to_state}" for (from_state, symbol), to_state in transition_set.items()])
+            transitions.set(new_transitions)
+            result_label.config(text="Self-loops added for missing transitions.", fg="green")
+        return
+
+    # Check for missing or incorrect accepting states
+    accepting_states_list = accepting_states.get().split(',')
+    accepting_states_list = [state.strip() for state in accepting_states_list]
+
+    # Check if there are any empty accepting states
+    if not accepting_states_list:
+        result_label.config(text="No accepting state entered.", fg="orange")
+        return
+
+    # Check if all accepting states are valid (i.e., part of the states list)
+    invalid_accepting_states = [state for state in accepting_states_list if state not in states]
+    if invalid_accepting_states:
+        result_label.config(text=f"Invalid accepting state(s): {', '.join(invalid_accepting_states)}.", fg="orange")
+        return
+
+    # Evaluate DFA with input string
     input_str = input_string.get().strip()
     current_state = initial
 
@@ -42,84 +74,61 @@ def run():
 
         if current_state in accepting:
             result = f"Accepted! Ended in state: {current_state}"
-            result_label.config(text=result)
+            result_label.config(text=result, fg="green")  # Accepted in green
         else:
             result = f"Rejected. Ended in state: {current_state}"
-            result_label.config(text=result)
+            result_label.config(text=result, fg="red")  # Rejected in red
 
     except KeyError:
         result = f"Invalid transition from state '{current_state}' with symbol '{symbol}'"
-        result_label.config(text=result)
+        result_label.config(text=result, fg="red")  # Error in red
     except ValueError as ve:
-        result_label.config(text=f"{ve}")
+        result_label.config(text=f"{ve}", fg="red")  # Error in red
 
+    # Generate DFA visualization
+    dfa_graph = graphviz.Digraph()
 
-    #start of dfa creation
-    dfa_graph= graphviz.Digraph()
-
-    for state in dfa["states"]:
-        if state in dfa["accepting_states"]:
-            dfa_graph.attr('node',shape='doublecircle')
+    for state in states:
+        if state in accepting:
+            dfa_graph.attr('node', shape='doublecircle')
         else:
-            dfa_graph.attr('node',shape='circle')
+            dfa_graph.attr('node', shape='circle')
         dfa_graph.node(state)
 
-    dfa_graph.attr('node',shape='plaintext')
-    dfa_graph.node('start',label='')
-    dfa_graph.edge('start',dfa["initial_state"])
+    dfa_graph.attr('node', shape='plaintext')
+    dfa_graph.node('start', label='')
+    dfa_graph.edge('start', initial)
 
-    for (from_state,symbol),to_state in dfa["transitions"].items():
-        dfa_graph.edge(from_state,to_state, label=symbol)
+    for (from_state, symbol), to_state in transition_set.items():
+        dfa_graph.edge(from_state, to_state, label=symbol)
 
-    dfa_graph.render('dfa',format='png',view=False)
+    dfa_graph.render('dfa', format='png', view=False)
 
-    #end of dfa creation
-
-    #dfa output start
-
-    output= tk.Toplevel()
+    # Display DFA image in a new window
+    output = tk.Toplevel()
     output.title("DFA OUTPUT")
-    dfa_image= Image.open("dfa.png")
-    dfa_photo= ImageTk.PhotoImage(dfa_image)
-    dfa_label= tk.Label(output, image=dfa_photo)
+    dfa_image = Image.open("dfa.png")
+    dfa_photo = ImageTk.PhotoImage(dfa_image)
+    dfa_label = tk.Label(output, image=dfa_photo)
     dfa_label.pack()
 
     output.mainloop()
 
-    #dfa output end
-
-
     print("DFA Structure:")
-    for k, v in dfa.items():
+    for k, v in {
+        "states": states,
+        "alphabet": alphabet_set,
+        "initial_state": initial,
+        "accepting_states": accepting,
+        "transitions": transition_set,
+        "input": input_str
+    }.items():
         print(f"{k}: {v}")
 
-
-def dfa_creation(initial_state,all_states,alphabet,transitions,accepting_states,input_string):
-    dfa= graphviz.Digraph()
-
-    for state in all_states:
-        if state in accepting_states:
-            dfa.attr('node',shape='doublecircle')
-        else:
-            dfa.attr('node',shape='circle')
-        dfa.node(state)
-    
-    dfa.attr('node',shape='plaintext')
-    dfa.node('start',label='')
-    dfa.edge('start',initial_state)
-    for (from_state,symbol),to_state in transitions.items():
-        dfa.edge(from_state,to_state, label=symbol)
-
-    dfa.render('dfa',format='png',view=False)
-
-    return dfa
-
-
-
-# Main 
+# Main GUI setup
 root = tk.Tk()
 root.title("DFA")
-root.config(padx=30, pady=30) 
+root.config(padx=30, pady=30)
 root.geometry("1000x400")
 
 initial_state = tk.StringVar()
@@ -129,7 +138,7 @@ transitions = tk.StringVar()
 accepting_states = tk.StringVar()
 input_string = tk.StringVar()
 
-
+# GUI input fields and labels
 tk.Label(root, text="Enter Initial State: ").grid(row=1, column=0, padx=5, pady=5, sticky='w')
 tk.Entry(root, textvariable=initial_state, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=1, column=1, padx=5, pady=5)
 
@@ -148,10 +157,22 @@ tk.Entry(root, textvariable=accepting_states, width=50, bd=2, relief="solid", hi
 tk.Label(root, text="Input String to Test: ").grid(row=6, column=0, padx=5, pady=5, sticky='w')
 tk.Entry(root, textvariable=input_string, width=50, bd=2, relief="solid", highlightthickness=2).grid(row=6, column=1, padx=5, pady=5)
 
-tk.Button(root, text="Run", command=run).grid(row=7, column=0, columnspan=2, pady=10)
+# Debug run button
+def debug_run():
+    initial_state.set("q0")
+    all_states.set("q0, q1")
+    accepting_states.set("q1")
+    alphabet.set("0, 1")
+    transitions.set("q0-0-q1; q1-0-q0; q0-1-q0; q1-1-q1")
+    input_string.set("010")
 
+#Debug button
+tk.Button(root, text="Load Debug Inputs", command=debug_run).grid(row=7, column=0, columnspan=2, pady=10)
+# Run button
+tk.Button(root, text="Run", command=run).grid(row=8, column=0, columnspan=2, pady=10)
+
+# Result label for showing messages
 result_label = tk.Label(root, text="", font=("Arial", 12, "bold"))
 result_label.grid(row=9, column=0, columnspan=2, pady=10)
-
 
 root.mainloop()
