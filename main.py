@@ -77,16 +77,30 @@ def run_string():
         current = step_index.get()
         total = len(steps)
       
+        #Updates labels
         if current >= total:
-            current_label.config(text="No more steps.")
+            transition_label.config(text="No more steps.")
             return
-
+        
         from_state, symbol, to_state = steps[current]
         current_text = f"Transition {current + 1} of {total}: {from_state} --{symbol}--> {to_state}"
 
-        string_label.config(text=dynamic_string.get())
-        current_label.config(text=current_text)
+        string_label.config(text=f"String: '{dynamic_string.get()}'")
+        transition_label.config(text=current_text)
 
+        if current < total-1:
+            current_label.config(text=f"Current State: {from_state}")
+            next_label.config(text=f"Next State: {to_state}")
+        else:
+            current_label.config(text=f"Final State: {to_state}")
+        
+        if current == total -1:
+            if to_state in accepting:
+                next_label.config(text="Accepted!", fg="green")
+            else:
+                next_label.config(text="Rejected.", fg="red")
+
+        # Creates DFA
         dfa_graph = graphviz.Digraph()
 
         for state in states:
@@ -96,8 +110,12 @@ def run_string():
                 dfa_graph.attr('node', shape='circle')
             dfa_graph.node(state)
 
-            if step_index.get() < len(steps) and state == steps[step_index.get()][0]:
-                dfa_graph.node(state, style='filled', fillcolor='lightblue', color='blue', penwidth='2')
+            # Highlight current state
+            if current < total and state == steps[current][0]:
+                if current < total-1:
+                    dfa_graph.node(state, style='filled', fillcolor='lightblue', color='blue', penwidth='2')
+                else:
+                    dfa_graph.node(state, style='filled', fillcolor='lightgreen', color='blue', penwidth='2')
             else:
                 dfa_graph.node(state)
 
@@ -105,9 +123,13 @@ def run_string():
         dfa_graph.node('start', label='')
         dfa_graph.edge('start', initial)            
 
+        # Highlight current transition
         for (from_s, sym), to_s in transition_set.items():
-            if steps[step_index.get()] == (from_s, sym, to_s):
-                dfa_graph.edge(from_s, to_s, label=sym, color='green', penwidth='2')
+            if current < total and steps[current] == (from_s, sym, to_s): 
+                if current < total - 1:
+                    dfa_graph.edge(from_s, to_s, label=sym, color='green', penwidth='2')
+                else: 
+                    dfa_graph.edge(from_s, to_s, label=sym)
             else:
                 dfa_graph.edge(from_s, to_s, label=sym)
 
@@ -117,6 +139,16 @@ def run_string():
         photo = ImageTk.PhotoImage(img)
         dfa_label.config(image=photo)
         dfa_label.image = photo
+
+        if current <= 0:
+            prev_button.config(state="disabled")
+        else:
+            prev_button.config(state="normal")
+
+        if current >= len(steps) - 1:
+            next_button.config(state="disabled")
+        else:
+            next_button.config(state="normal")        
     
     # Next character in input string
     def next_transition():
@@ -133,15 +165,20 @@ def run_string():
             dynamic_string.set(dynamic_string.get()[:-1])
             current_transition()
 
-    string_label = tk.Label(displayer, text=f"Input String: '{input_str}'", font=("Arial", 10, "bold"))
+    string_label = tk.Label(displayer, text=f"String: '{input_str}'", font=("Arial", 10, "bold"))
     string_label.pack(pady=(10, 5))
+    transition_label = tk.Label(displayer, text="Press next to begin", font=("Arial", 10))
+    transition_label.pack(pady=(0, 10))
     current_label = tk.Label(displayer, text="", font=("Arial", 10))
     current_label.pack(pady=(0, 10))
-
+    next_label = tk.Label(displayer, text="", font=("Arial", 10))
+    next_label.pack(pady=(0, 10))
 
     # Back and forward buttons for window
-    tk.Button(displayer, text="Previous", command=previous_transition).pack(side="left", padx=10)
-    tk.Button(displayer, text="Next", command=next_transition).pack(side="right", padx=10)
+    prev_button = tk.Button(displayer, text="Previous", command=previous_transition)
+    prev_button.pack(side="left", padx=10)
+    next_button = tk.Button(displayer, text="Next", command=next_transition)
+    next_button.pack(side="right", padx=10)
 
     displayer.mainloop()
 
