@@ -121,7 +121,10 @@ def run_string():
                 dfa_graph.node(state, color='#D8BFD8', penwidth='2')
             # final state
             elif current == total and state == steps[-1][2]:
-                dfa_graph.node(state, style='filled', fillcolor='lightblue', color='green', penwidth='2')
+                if state in accepting:
+                    dfa_graph.node(state, style='filled', fillcolor='lightblue', color='green', penwidth='2')
+                else:
+                    dfa_graph.node(state, style='filled', fillcolor='lightblue', color='red', penwidth='2')
             else:
                 dfa_graph.node(state)
 
