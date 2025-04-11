@@ -77,23 +77,22 @@ def run_string():
         total = len(steps)
       
         #Updates labels
-        if current > total - 1:
-            transition_label.config(text="No more steps.")
-            return
-
-        from_state, symbol, to_state = steps[current]
-        current_text = f"Transition {current + 1} of {total}: {from_state} --{symbol}--> {to_state}"
+        if current < total:
+            from_state, symbol, to_state = steps[current]
+        else:
+            from_state, symbol, to_state = steps[-1] 
+        current_text = f"Step {current + 1} of {total+1}: {from_state} --{symbol}--> {to_state}"
 
         string_label.config(text=f"String: '{dynamic_string.get()}'")
         transition_label.config(text=current_text, fg="orange")
 
-        if current < total-1:
+        if current < total:
             current_label.config(text=f"Current State: {from_state}", fg="lightblue")
             next_label.config(text=f"Next State: {to_state}", fg="#D8BFD8")
         else:
             current_label.config(text=f"Final State: {to_state}", fg="lightgreen")
         
-        if current == total -1:
+        if current == total:
             if to_state in accepting:
                 next_label.config(text="Accepted!", fg="green")
             else:
@@ -110,13 +109,18 @@ def run_string():
             dfa_graph.node(state)
 
             # Highlight states depending on condition
-            if current < total and state == steps[current][0] and current < total and state == steps[current][2] and current != total - 1:
+    
+            # current state and next state are the same
+            if current < total and state == steps[current][0] and state == steps[current][2] and current != total - 1:
                dfa_graph.node(state, style='filled', fillcolor='lightblue', color='#D8BFD8', penwidth='2') 
-            elif current < total and state == steps[current][0] and current != total - 1:
+            # current state
+            elif current < total and state == steps[current][0] and current != total:
                 dfa_graph.node(state, style='filled', fillcolor='lightblue', color='', penwidth='2')
-            elif current < total and state == steps[current][2] and current != total - 1:
+            # next state
+            elif current < total and state == steps[current][2] and current != total:
                 dfa_graph.node(state, color='#D8BFD8', penwidth='2')
-            elif current < total and state == steps[current][0] and current == total - 1:
+            # final state
+            elif current == total and state == steps[-1][2]:
                 dfa_graph.node(state, style='filled', fillcolor='lightblue', color='green', penwidth='2')
             else:
                 dfa_graph.node(state)
@@ -128,7 +132,7 @@ def run_string():
         # Highlight current transition
         for (from_s, sym), to_s in transition_set.items():
             if current < total and steps[current] == (from_s, sym, to_s): 
-                if current < total - 1:
+                if current < total:
                     dfa_graph.edge(from_s, to_s, label=sym, color='orange', penwidth='2')
                 else: 
                     dfa_graph.edge(from_s, to_s, label=sym)
@@ -148,25 +152,34 @@ def run_string():
         else:
             prev_button.config(state="normal")
 
-        if current >= len(steps) - 1:
+        if current >= len(steps):
             next_button.config(state="disabled")
         else:
             next_button.config(state="normal")        
     
     # Next character in input string
     def next_transition():
-        if step_index.get() < len(steps):
-            step_index.set(step_index.get() + 1)
-            symbol = steps[step_index.get()][1]
+        current = step_index.get()
+
+        if current < len(steps) - 1:
+            step_index.set(current + 1)
+            symbol = steps[current + 1][1]
             dynamic_string.set(dynamic_string.get() + symbol)
+            current_transition() 
+        elif current == len(steps) - 1:
+            step_index.set(current + 1)
             current_transition()
 
     # Previous character in input string
     def previous_transition():
         if step_index.get() > 0:
             step_index.set(step_index.get() - 1)
-            dynamic_string.set(dynamic_string.get()[:-1])
+            if step_index.get() == 1:
+                pass
+            else:
+                dynamic_string.set(dynamic_string.get()[:-1])
             current_transition()
+    
 
     # Pop up window input fields and labels
     string_label = tk.Label(displayer, text=f"String: '{input_str}'", font=("Arial", 10, "bold"))
@@ -312,7 +325,7 @@ def sample_run():
     accepting_states.set("q1")
     alphabet.set("0, 1")
     transitions.set("q0-0-q1; q1-0-q0; q0-1-q0; q1-1-q1")
-    input_string.set("011")
+    input_string.set("01100")
 
 # Clear button
 def clear():
