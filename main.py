@@ -106,6 +106,8 @@ def run():
 
     # Display DFA image in a new window
     output = tk.Toplevel()
+    output.geometry("+750+100")
+    # output.resizable(False, False)
     output.title("DFA OUTPUT")
     dfa_image = Image.open("dfa.png")
     dfa_photo = ImageTk.PhotoImage(dfa_image)
@@ -114,18 +116,7 @@ def run():
 
     output.mainloop()
 
-    print("DFA Structure:")
-    for k, v in {
-        "states": states,
-        "alphabet": alphabet_set,
-        "initial_state": initial,
-        "accepting_states": accepting,
-        "transitions": transition_set,
-        "input": input_str
-    }.items():
-        print(f"{k}: {v}")
-
-# Main GUI setup
+# ------------------------------- Main GUI setup ------------------------------- #
 root = tk.Tk()
 root.title("DFA")
 root.config(padx=30, pady=30)
