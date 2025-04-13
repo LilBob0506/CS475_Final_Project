@@ -111,7 +111,7 @@ def run_string():
             # Highlight states depending on condition
     
             # current state and next state are the same
-            if current < total and state == steps[current][0] and state == steps[current][2] and current != total - 1:
+            if current < total and state == steps[current][0] and state == steps[current][2] and current != total:
                dfa_graph.node(state, style='filled', fillcolor='lightblue', color='#D8BFD8', penwidth='2') 
             # current state
             elif current < total and state == steps[current][0] and current != total:
