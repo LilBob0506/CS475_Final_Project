@@ -75,7 +75,7 @@ def run_string():
     def current_transition():
         current = step_index.get()
         total = len(steps)
-      
+
         #Updates labels
         if current < total:
             from_state, symbol, to_state = steps[current]
@@ -163,26 +163,36 @@ def run_string():
     # Next character in input string
     def next_transition():
         current = step_index.get()
+        total = len(steps)
 
-        if current < len(steps) - 1:
+        if current < total - 1:
             step_index.set(current + 1)
             symbol = steps[current + 1][1]
             dynamic_string.set(dynamic_string.get() + symbol)
             current_transition() 
-        elif current == len(steps) - 1:
+        elif current == total - 1:
             step_index.set(current + 1)
             current_transition()
 
     # Previous character in input string
     def previous_transition():
-        if step_index.get() > 0:
-            step_index.set(step_index.get() - 1)
-            if step_index.get() == 1:
-                pass
-            else:
-                dynamic_string.set(dynamic_string.get()[:-1])
+        current = step_index.get()
+        total = len(steps)
+
+        if current == total:
+            step_index.set(current - 1)
             current_transition()
-    
+        elif current == total - 1:
+            step_index.set(current - 1)
+            dynamic_string.set(dynamic_string.get()[:-1])
+            current_transition()
+        elif current < total - 1 and current > 0:
+            step_index.set(current - 1)
+            dynamic_string.set(dynamic_string.get()[:-1])
+            current_transition()
+        elif current == 0:
+            step_index.set()
+            current_transition()
 
     # Pop up window input fields and labels
     string_label = tk.Label(displayer, text=f"String: '{input_str}'", font=("Arial", 10, "bold"))
