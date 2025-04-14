@@ -140,7 +140,10 @@ def run_string():
             current_label.config(text=f"Current State: {from_state}", fg="lightblue")
             next_label.config(text=f"Next State: {to_state}", fg="#D8BFD8")
         else:
-            current_label.config(text=f"Final State: {to_state}", fg="lightgreen")
+            if to_state in accepting:
+                current_label.config(text=f"Final State: {to_state}", fg="lightgreen")
+            else:
+                current_label.config(text=f"Final State: {to_state}", fg="#FF6666")
         
         if current == total:
             if to_state in accepting:
