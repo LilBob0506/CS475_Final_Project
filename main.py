@@ -75,6 +75,8 @@ def run_string():
     if iferror:
         return
     
+    result_label.config(text="")
+
     steps = []
     current_state = initial
     for symbol in input_str:
