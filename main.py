@@ -3,50 +3,6 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import graphviz
 
-def error_check(initial, states, alphabet_set, accepting, transition_set):
-    # Check for multiple initial states
-    if initial.count(',') > 0:
-        result_label.config(text="Only one initial state is allowed.", fg="orange")
-        return True
-
-    # Check for missing transitions and add self-loops if requested
-    missing_transitions = False
-    for state in states:
-        for symbol in alphabet_set:
-            if (state, symbol) not in transition_set:
-                result_label.config(text=f"Missing transition for state '{state}' on symbol '{symbol}'.", fg="orange")
-                missing_transitions = True
-
-    if missing_transitions:
-        # Ask if missing transitions should be self loops
-        response = messagebox.askyesno("Missing Transitions", "Do you want to add self-loops for missing transitions?")
-        if response:
-            # Update transition set with self loops for missing transitions
-            for state in states:
-                for symbol in alphabet_set:
-                    if (state, symbol) not in transition_set:
-                        transition_set[(state, symbol)] = state
-            # Update input fields with self-loops added
-            new_transitions = "; ".join([f"{from_state}-{symbol}-{to_state}" for (from_state, symbol), to_state in transition_set.items()])
-            transitions.set(new_transitions)
-            result_label.config(text="Self-loops added for missing transitions.", fg="green")
-        return True
-
-    # Check for missing or incorrect accepting states
-    accepting_states_list = accepting_states.get().split(',')
-    accepting_states_list = [state.strip() for state in accepting_states_list]
-
-    # Check if there are any empty accepting states
-    if not accepting_states_list:
-        result_label.config(text="No accepting state entered.", fg="orange")
-        return True
-
-    # Check if all accepting states are valid (i.e., part of the states list)
-    invalid_accepting_states = [state for state in accepting_states_list if state not in states]
-    if invalid_accepting_states:
-        result_label.config(text=f"Invalid accepting state(s): {', '.join(invalid_accepting_states)}.", fg="orange")
-        return True
-
 #Visualize String button
 def run_string():
     initial = initial_state.get().strip()
@@ -57,26 +13,22 @@ def run_string():
     transition_set = {}
     input_str = input_string.get().strip()
     
+    if not input_str:
+        result_label.config(text="No input string provided", fg="orange")
+        return
+    stateCheck= set((str,str))
     for rule in transitions.get().split(';'):
         try:
             from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
+            if (from_state, symbol) in stateCheck:
+                result_label.config(text=f"{from_state} has multiple transitions for '{symbol}'", fg="red")
+                return
             transition_set[(from_state, symbol)] = to_state
+            stateCheck.add((from_state, symbol))
         except ValueError:
             result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
             return
     
-    # Checks if input string is provided
-    if not input_str:
-        result_label.config(text="No input string provided", fg="orange")
-        return
-
-    # Checks for errors
-    iferror = error_check(initial, states, alphabet_set, accepting, transition_set)
-    if iferror:
-        return
-    
-    result_label.config(text="")
-
     steps = []
     current_state = initial
     for symbol in input_str:
@@ -142,10 +94,7 @@ def run_string():
             current_label.config(text=f"Current State: {from_state}", fg="lightblue")
             next_label.config(text=f"Next State: {to_state}", fg="#D8BFD8")
         else:
-            if to_state in accepting:
-                current_label.config(text=f"Final State: {to_state}", fg="lightgreen")
-            else:
-                current_label.config(text=f"Final State: {to_state}", fg="#FF6666")
+            current_label.config(text=f"Final State: {to_state}", fg="lightgreen")
         
         if current == total:
             if to_state in accepting:
@@ -275,18 +224,63 @@ def run():
     accepting = set(a.strip() for a in accepting_states.get().split(','))
 
     transition_set = {}
-
+    input=input_string
+    stateCheck= set((str,str))
     for rule in transitions.get().split(';'):
         try:
             from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
+            if (from_state, symbol) in stateCheck:
+                result_label.config(text=f"{from_state} has multiple transitions for '{symbol}'", fg="red")
+                return
+
             transition_set[(from_state, symbol)] = to_state
+            stateCheck.add((from_state, symbol))
+
         except ValueError:
             result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
             return
 
-    # Checks for errors
-    iferror = error_check(initial, states, alphabet_set, accepting, transition_set)
-    if iferror:
+    # Check for multiple initial states
+    if initial.count(',') > 0:
+        result_label.config(text="Only one initial state is allowed.", fg="orange")
+        return
+
+    # Check for missing transitions and add self-loops if requested
+    missing_transitions = False
+    for state in states:
+        for symbol in alphabet_set:
+            if (state, symbol) not in transition_set:
+                result_label.config(text=f"Missing transition for state '{state}' on symbol '{symbol}'.", fg="orange")
+                missing_transitions = True
+
+    if missing_transitions:
+        # Ask if missing transitions should be self loops
+        response = messagebox.askyesno("Missing Transitions", "Do you want to add self-loops for missing transitions?")
+        if response:
+            # Update transition set with self loops for missing transitions
+            for state in states:
+                for symbol in alphabet_set:
+                    if (state, symbol) not in transition_set:
+                        transition_set[(state, symbol)] = state
+            # Update input fields with self-loops added
+            new_transitions = "; ".join([f"{from_state}-{symbol}-{to_state}" for (from_state, symbol), to_state in transition_set.items()])
+            transitions.set(new_transitions)
+            result_label.config(text="Self-loops added for missing transitions.", fg="green")
+        return
+
+    # Check for missing or incorrect accepting states
+    accepting_states_list = accepting_states.get().split(',')
+    accepting_states_list = [state.strip() for state in accepting_states_list]
+
+    # Check if there are any empty accepting states
+    if not accepting_states_list:
+        result_label.config(text="No accepting state entered.", fg="orange")
+        return
+
+    # Check if all accepting states are valid (i.e., part of the states list)
+    invalid_accepting_states = [state for state in accepting_states_list if state not in states]
+    if invalid_accepting_states:
+        result_label.config(text=f"Invalid accepting state(s): {', '.join(invalid_accepting_states)}.", fg="orange")
         return
 
     # Evaluate DFA with input string
