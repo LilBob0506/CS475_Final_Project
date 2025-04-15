@@ -57,10 +57,18 @@ def run_string():
     transition_set = {}
     input_str = input_string.get().strip()
     
-    for rule in transitions.get().split(';'):
+    if not input_str:
+         result_label.config(text="No input string provided", fg="orange")
+         return
+     stateCheck= set((str,str))
+     for rule in transitions.get().split(';'):
         try:
             from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
+            if (from_state, symbol) in stateCheck:
+                result_label.config(text=f"{from_state} has multiple transitions for '{symbol}'", fg="red")
+                return
             transition_set[(from_state, symbol)] = to_state
+            stateCheck.add((from_state, symbol))
         except ValueError:
             result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
             return
@@ -276,13 +284,21 @@ def run():
 
     transition_set = {}
 
-    for rule in transitions.get().split(';'):
+    input=input_string
+     stateCheck= set((str,str))
+     for rule in transitions.get().split(';'):
         try:
             from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
+            if (from_state, symbol) in stateCheck:
+                result_label.config(text=f"{from_state} has multiple transitions for '{symbol}'", fg="red")
+                return
+ 
             transition_set[(from_state, symbol)] = to_state
+            stateCheck.add((from_state, symbol))
+
         except ValueError:
-            result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
-            return
+             result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
+             return
 
     # Checks for errors
     iferror = error_check(initial, states, alphabet_set, accepting, transition_set)
