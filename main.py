@@ -28,7 +28,19 @@ def run_string():
         except ValueError:
             result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
             return
+
+    # Checks if input string is provided
+    if not input_str:
+        result_label.config(text="No input string provided", fg="orange")
+        return
+
+    # Checks for errors
+    iferror = error_check(initial, states, alphabet_set, accepting, transition_set)
+    if iferror:
+        return
     
+    result_label.config(text="")
+
     steps = []
     current_state = initial
     for symbol in input_str:
