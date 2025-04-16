@@ -107,6 +107,7 @@ def run_string():
 
     # Initial DFA creation
     dfa_graph = graphviz.Digraph()
+    dfa_graph.attr(rankdir='LR')
 
     for state in states:
         if state in accepting:
@@ -164,6 +165,7 @@ def run_string():
 
         # Creates DFA
         dfa_graph = graphviz.Digraph()
+        dfa_graph.attr(rankdir='LR')
 
         for state in states:
             if state in accepting:
@@ -336,6 +338,7 @@ def run():
 
     # Generate DFA visualization
     dfa_graph = graphviz.Digraph()
+    dfa_graph.attr(rankdir='LR')
 
     for state in states:
         if state in accepting:
