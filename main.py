@@ -210,16 +210,16 @@ def run_string():
         current_text = f"Step {current + 1} of {total+1}: {from_state} --{symbol}--> {to_state}"
 
         string_label.config(text=f"String: '{dynamic_string.get()}'")
-        transition_label.config(text=current_text, fg="orange")
+        transition_label.config(text=current_text, fg="#FFA500") # orange
 
         if current < total:
-            current_label.config(text=f"Current State: {from_state}", fg="lightblue")
-            next_label.config(text=f"Next State: {to_state}", fg="#D8BFD8")
+            current_label.config(text=f"Current State: {from_state}", fg="#4682B4") # blue
+            next_label.config(text=f"Next State: {to_state}", fg="#6A0DAD") # purple
         else:
             if to_state in accepting:
-                current_label.config(text=f"Final State: {to_state}", fg="lightgreen")
+                current_label.config(text=f"Final State: {to_state}", fg="black") # was light green, now black, keeping conditional in case we want to revert it back
             else:
-                current_label.config(text=f"Final State: {to_state}", fg="#FF6666")
+                current_label.config(text=f"Final State: {to_state}", fg="#black") # light red, now black
         
         if current == total:
             if to_state in accepting:
@@ -242,19 +242,19 @@ def run_string():
     
             # current state and next state are the same
             if current < total and state == steps[current][0] and state == steps[current][2] and current != total:
-               dfa_graph.node(state, style='filled', fillcolor='lightblue', color='#D8BFD8', penwidth='2') 
+               dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='#6A0DAD', penwidth='2') # blue inside, purple outside
             # current state
             elif current < total and state == steps[current][0] and current != total:
-                dfa_graph.node(state, style='filled', fillcolor='lightblue', color='', penwidth='2')
+                dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='', penwidth='2') # blue
             # next state
             elif current < total and state == steps[current][2] and current != total:
-                dfa_graph.node(state, color='#D8BFD8', penwidth='2')
+                dfa_graph.node(state, color='#6A0DAD', penwidth='2') # purple
             # final state
             elif current == total and state == steps[-1][2]:
                 if state in accepting:
-                    dfa_graph.node(state, style='filled', fillcolor='lightblue', color='green', penwidth='2')
+                    dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='green', penwidth='2') # blue inside
                 else:
-                    dfa_graph.node(state, style='filled', fillcolor='lightblue', color='red', penwidth='2')
+                    dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='red', penwidth='2') # blue inside
             else:
                 dfa_graph.node(state)
 
@@ -266,7 +266,7 @@ def run_string():
         for (from_s, sym), to_s in transition_set.items():
             if current < total and steps[current] == (from_s, sym, to_s): 
                 if current < total:
-                    dfa_graph.edge(from_s, to_s, label=sym, color='orange', penwidth='2')
+                    dfa_graph.edge(from_s, to_s, label=sym, color='#FFA500', penwidth='2') # orange
                 else: 
                     dfa_graph.edge(from_s, to_s, label=sym)
             else:
