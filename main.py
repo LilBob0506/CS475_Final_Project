@@ -1,9 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import simpledialog
 from PIL import Image, ImageTk
 import graphviz
 
 def error_check(initial, states, alphabet_set, accepting, transition_set):
+    changes_made = False  # Track whether any changes have been made
+    
     # Check for multiple initial states
     if initial.count(',') > 0:
         result_label.config(text="Only one initial state is allowed.", fg="orange")
@@ -17,20 +20,79 @@ def error_check(initial, states, alphabet_set, accepting, transition_set):
                 result_label.config(text=f"Missing transition for state '{state}' on symbol '{symbol}'.", fg="orange")
                 missing_transitions = True
 
-    if missing_transitions:
-        # Ask if missing transitions should be self loops
-        response = messagebox.askyesno("Missing Transitions", "Do you want to add self-loops for missing transitions?")
+    # Check for transitions using symbols not in the alphabet
+    invalid_symbols = set()
+    for (from_state, symbol) in transition_set.keys():
+        if symbol not in alphabet_set:
+            invalid_symbols.add(symbol)
+
+    if invalid_symbols:
+        invalid_symbols_str = ', '.join(invalid_symbols)
+        response = messagebox.askyesno(
+            "Invalid Symbols in Transitions",
+            f"Transitions contain symbols not in the alphabet: {invalid_symbols_str}\n\n"
+            "Do you want to add them to the alphabet?"
+        )
+
         if response:
-            # Update transition set with self loops for missing transitions
+            # Add invalid symbols to the alphabet
+            alphabet_set.extend(invalid_symbols)
+            alphabet.set(', '.join(alphabet_set))  # Update the input field
+            result_label.config(text="Invalid symbols added to alphabet.", fg="orange")
+            changes_made = True  # Changes were made
+        else:
+            # Remove transitions with invalid symbols
+            transition_set = {
+                key: val for key, val in transition_set.items() if key[1] in alphabet_set
+            }
+            new_transitions = "; ".join([
+                f"{from_state}-{symbol}-{to_state}" 
+                for (from_state, symbol), to_state in transition_set.items()
+            ])
+            transitions.set(new_transitions)  # Update the input field
+            result_label.config(text="Transitions with invalid symbols removed.", fg="orange")
+            changes_made = True  # Changes were made
+
+    if missing_transitions:
+        # Ask if missing transitions should go to a dead state
+        response = messagebox.askyesno("Missing Transitions", "Missing transitions detected. Do you want to add a dead state for them?")
+        if response:
+            # Check if a state named "dead" already exists
+            if 'dead' in states:
+                use_existing = messagebox.askyesno(
+                    "Use Existing Dead State", 
+                    "A state named 'dead' already exists. Do you want to use this existing dead state?"
+                )
+                if use_existing:
+                    dead_state = 'dead'
+                else:
+                    dead_state = simpledialog.askstring("Dead State", "Enter a name for the new dead state:")
+            else:
+                # If no "dead" state exists, prompt the user to create one
+                dead_state = simpledialog.askstring("Dead State", "Enter a name for the new dead state:")
+
+            if not dead_state:
+                result_label.config(text="Dead state name was not provided.", fg="orange")
+                return True
+            
+            # Add the dead state to the state list if not already present
+            if dead_state not in states:
+                states.append(dead_state)
+                all_states.set(", ".join(states))
+
+            # Add missing transitions pointing to dead state
             for state in states:
                 for symbol in alphabet_set:
                     if (state, symbol) not in transition_set:
-                        transition_set[(state, symbol)] = state
-            # Update input fields with self-loops added
+                        transition_set[(state, symbol)] = dead_state
+
+            # Update the transitions input field
             new_transitions = "; ".join([f"{from_state}-{symbol}-{to_state}" for (from_state, symbol), to_state in transition_set.items()])
             transitions.set(new_transitions)
-            result_label.config(text="Self-loops added for missing transitions.", fg="green")
+
+            result_label.config(text="Missing transitions redirected to dead state.", fg="green")
         return True
+
 
     # Check for missing or incorrect accepting states
     accepting_states_list = accepting_states.get().split(',')
@@ -46,6 +108,8 @@ def error_check(initial, states, alphabet_set, accepting, transition_set):
     if invalid_accepting_states:
         result_label.config(text=f"Invalid accepting state(s): {', '.join(invalid_accepting_states)}.", fg="orange")
         return True
+
+    return changes_made  # Return whether any changes were made
 
 #Visualize String button
 def run_string():
