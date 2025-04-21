@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
@@ -468,6 +469,215 @@ def demo_two():
     transitions.set("q0-0-q1; q1-0-q0; q0-1-q2; q1-1-q0; q2-0-q0; q2-1-q2; q0-2-q2; q0-3-q0; q1-2-q1; q1-3-q2; q2-2-q1; q2-3-q0")
     input_string.set("1231321")
 
+def gif():
+    gif_transition()
+def gif_transition():
+        initial = initial_state.get().strip()
+        states = [s.strip() for s in all_states.get().split(',')]
+        alphabet_set = [a.strip() for a in alphabet.get().split(',')]
+        accepting = set(a.strip() for a in accepting_states.get().split(','))
+
+        transition_set = {}
+        input_str = input_string.get().strip()
+        
+        if not input_str:
+            result_label.config(text="No input string provided", fg="orange")
+            return
+
+        stateCheck= set((str,str))
+        for rule in transitions.get().split(';'):
+            try:
+                from_state, symbol, to_state = [part.strip() for part in rule.strip().split('-')]
+                if (from_state, symbol) in stateCheck:
+                    result_label.config(text=f"{from_state} has multiple transitions for '{symbol}'", fg="red")
+                    return
+                transition_set[(from_state, symbol)] = to_state
+                stateCheck.add((from_state, symbol))
+            except ValueError:
+                result_label.config(text=f"Invalid transition format: '{rule}'", fg="red")
+                return
+
+        # Checks if input string is provided
+        if not input_str:
+            result_label.config(text="No input string provided", fg="orange")
+            return
+
+        # Checks for errors
+        iferror = error_check(initial, states, alphabet_set, accepting, transition_set)
+        if iferror:
+            return
+        
+        result_label.config(text="")
+
+        steps = []
+        current_state = initial
+        for symbol in input_str:
+            if symbol not in alphabet_set:
+                result_label.config(text=f"Symbol '{symbol}' not in alphabet.", fg="red")
+                return
+            if (current_state, symbol) not in transition_set:
+                result_label.config(text=f"No transition from {current_state} with symbol '{symbol}'", fg="red")
+                return
+            next_state = transition_set[(current_state, symbol)]
+            steps.append((current_state, symbol, next_state))
+            current_state = next_state
+        
+        # Display window for transition state
+        displayer = tk.Toplevel()
+        displayer.title("DFA Transitions")
+        displayer.geometry("+800+100")
+        # output.resizable(False, False)
+
+        # Initial DFA creation
+        dfa_graph = graphviz.Digraph()
+        dfa_graph.attr(rankdir='LR')
+
+        for state in states:
+            if state in accepting:
+                dfa_graph.attr('node', shape='doublecircle')
+            else:
+                dfa_graph.attr('node', shape='circle')
+            dfa_graph.node(state)
+
+        dfa_graph.attr('node', shape='plaintext')
+        dfa_graph.node('start', label='')
+        dfa_graph.edge('start', initial)
+
+        for (from_state, symbol), to_state in transition_set.items():
+            dfa_graph.edge(from_state, to_state, label=symbol)
+
+        dfa_graph.render('dfa', format='png', view=False)
+
+        dfa_image = Image.open("dfa.png")
+        dfa_photo = ImageTk.PhotoImage(dfa_image)
+        dfa_label = tk.Label(displayer, image=dfa_photo)
+        dfa_label.pack()
+
+        step_index = tk.IntVar(value=-1)
+        dynamic_string = tk.StringVar(value="")
+
+        # Changes the DFA displayed on command
+        def current_transition():
+            current = step_index.get()
+            total = len(steps)
+
+            #Updates labels
+            if current < total:
+                from_state, symbol, to_state = steps[current]
+            else:
+                from_state, symbol, to_state = steps[-1] 
+            current_text = f"Step {current + 1} of {total+1}: {from_state} --{symbol}--> {to_state}"
+
+            string_label.config(text=f"String: '{dynamic_string.get()}'")
+
+
+            if current < total:
+                current_label.config(text=f"Current State: {from_state}", fg="#4682B4") # blue
+                next_label.config(text=f"Next State: {to_state}", fg="#6A0DAD") # purple
+            else:
+                if to_state in accepting:
+                    current_label.config(text=f"Final State: {to_state}", fg="black") # was light green, now black, keeping conditional in case we want to revert it back
+                else:
+                    current_label.config(text=f"Final State: {to_state}", fg="#black") # light red, now black
+            
+            if current == total:
+                if to_state in accepting:
+                    next_label.config(text="Accepted!", fg="green")
+                else:
+                    next_label.config(text="Rejected.", fg="red")
+
+            # Creates DFA
+            dfa_graph = graphviz.Digraph()
+            dfa_graph.attr(rankdir='LR')
+
+            for state in states:
+                if state in accepting:
+                    dfa_graph.attr('node', shape='doublecircle')
+                else:
+                    dfa_graph.attr('node', shape='circle')
+                dfa_graph.node(state)
+
+                # Highlight states depending on condition
+        
+                # current state and next state are the same
+                if current < total and state == steps[current][0] and state == steps[current][2] and current != total:
+                    dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='#6A0DAD', penwidth='2') # blue inside, purple outside
+                # current state
+                elif current < total and state == steps[current][0] and current != total:
+                    dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='', penwidth='2') # blue
+                # next state
+                elif current < total and state == steps[current][2] and current != total:
+                    dfa_graph.node(state, color='#6A0DAD', penwidth='2') # purple
+                # final state
+                elif current == total and state == steps[-1][2]:
+                    if state in accepting:
+                        dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='green', penwidth='2') # blue inside
+                    else:
+                        dfa_graph.node(state, style='filled', fillcolor='#4682B4', color='red', penwidth='2') # blue inside
+                else:
+                    dfa_graph.node(state)
+
+            dfa_graph.attr('node', shape='plaintext')
+            dfa_graph.node('start', label='')
+            dfa_graph.edge('start', initial)            
+
+            # Highlight current transition
+            for (from_s, sym), to_s in transition_set.items():
+                if current < total and steps[current] == (from_s, sym, to_s): 
+                    if current < total:
+                        dfa_graph.edge(from_s, to_s, label=sym, color='#FFA500', penwidth='2') # orange
+                    else: 
+                        dfa_graph.edge(from_s, to_s, label=sym)
+                else:
+                    dfa_graph.edge(from_s, to_s, label=sym)
+
+            dfa_graph.render('dfa', format='png', view=False)
+
+            img = Image.open("dfa.png")
+            photo = ImageTk.PhotoImage(img)
+            dfa_label.config(image=photo)
+            dfa_label.image = photo
+
+        def timing():
+            next_transition()
+            displayer.after(1000, lambda: timing())
+
+
+                 # Next character in input string
+        def next_transition():
+            current = step_index.get()
+            total = len(steps)
+
+            if current < total - 1:
+                step_index.set(current + 1)
+                symbol = steps[current + 1][1]
+                dynamic_string.set(dynamic_string.get() + symbol)
+                current_transition() 
+            elif current == total - 1:
+                step_index.set(current + 1)
+                current_transition()
+            else:
+                current=0
+                step_index.set(0)
+                dynamic_string.set(dynamic_string.get()[0])
+                current_transition()
+                
+
+    # Pop up window input fields and labels
+        string_label = tk.Label(displayer, text=f"String: '{input_str}'", font=("Arial", 10, "bold"))
+        string_label.pack(pady=(10, 5))
+        current_label = tk.Label(displayer, text="", font=("Arial", 10))
+        current_label.pack(pady=(0, 10))
+        next_label = tk.Label(displayer, text="", font=("Arial", 10))
+        next_label.pack(pady=(0, 10))
+
+        # Back and forward buttons for window
+        img = Image.open("dfa.png")
+        photo = ImageTk.PhotoImage(img)
+        dfa_label.config(image=photo)
+        dfa_label.image = photo
+        displayer.after(1000, lambda: timing())
+
 # ------------------------------- Main GUI setup ------------------------------- #
 root = tk.Tk()
 root.title("DFA Visualizer")
@@ -515,6 +725,8 @@ tk.Button(root, text="Visualize Transitions", command=run_string).grid(row=9, co
 # Demo presets 
 tk.Button(root, text="Demo Preset 1", command=demo_one).grid(row=8, column=1, columnspan=2, pady=10, sticky='e')
 tk.Button(root, text="Demo Preset 2", command=demo_two).grid(row=9, column=1, columnspan=2, pady=10, sticky='e')
+
+tk.Button(root, text="GIF", command=gif).grid(row=10, column=1, columnspan=2, pady=10, sticky='e')
 
 
 # Result label for showing messages
