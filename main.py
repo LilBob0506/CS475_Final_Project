@@ -451,24 +451,6 @@ def clear():
     transitions.set("")
     input_string.set("")
 
-
-# Demo preset inputs
-def demo_one():
-    initial_state.set("q0")
-    all_states.set("q0, q1, q2, q3, q4, q5")
-    accepting_states.set("q5, q3")
-    alphabet.set("0, 1")
-    transitions.set("q0-0-q1; q1-0-q0; q0-1-q3; q1-1-q5; q2-0-q1; q2-1-q3; q3-0-q3; q3-1-q1; q4-0-q5; q4-1-q4; q5-0-q1; q5-1-q4")
-    input_string.set("10100111001")
-
-def demo_two():
-    initial_state.set("q0")
-    all_states.set("q0, q1, q2")
-    accepting_states.set("q2")
-    alphabet.set("0, 1, 2, 3")
-    transitions.set("q0-0-q1; q1-0-q0; q0-1-q2; q1-1-q0; q2-0-q0; q2-1-q2; q0-2-q2; q0-3-q0; q1-2-q1; q1-3-q2; q2-2-q1; q2-3-q0")
-    input_string.set("1231321")
-
 def gif():
     gif_transition()
 def gif_transition():
@@ -722,11 +704,8 @@ tk.Button(root, text="Generate DFA", command=run).grid(row=8, column=0, columnsp
 tk.Button(root, text="Visualize Transitions", command=run_string).grid(row=9, column=0, columnspan=2, pady=10)
 
 
-# Demo presets 
-tk.Button(root, text="Demo Preset 1", command=demo_one).grid(row=8, column=1, columnspan=2, pady=10, sticky='e')
-tk.Button(root, text="Demo Preset 2", command=demo_two).grid(row=9, column=1, columnspan=2, pady=10, sticky='e')
-
-tk.Button(root, text="GIF", command=gif).grid(row=10, column=1, columnspan=2, pady=10, sticky='e')
+# GIF button 
+tk.Button(root, text="GIF", command=gif).grid(row=8, column=1, columnspan=2, pady=10, sticky='e')
 
 
 # Result label for showing messages
